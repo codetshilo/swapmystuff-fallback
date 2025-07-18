@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Verification - SwapMyStuff</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f4f4f4;
+            text-align: center;
+        }
+        .container {
+            max-width: 600px;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            color: #333;
+        }
+        p {
+            color: #666;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Email Verification Complete!</h1>
+        <p>Awesome, your email is now verified for SwapMyStuff! Please close this page and head back to the app.</p>
+    </div>
+    <script>
+        // Extract query parameters (e.g., state, token) to pass to the app
+        const params = new URLSearchParams(window.location.search);
+        const state = params.get('state');
+        const token = params.get('token');
+        const type = params.get('type');
+        const email = params.get('email');
+
+        // Redirect to app with parameters if app is installed
+        if (state && token && type) {
+            const deepLink = `com.swapmystuff20://auth/confirm?state=${state}&token=${token}&type=${type}${email ? `&email=${email}` : ''}`;
+            window.location.href = deepLink;
+        }
+    </script>
+</body>
+</html>
