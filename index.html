@@ -33,21 +33,30 @@
 </head>
 <body>
     <div class="container">
-        <h1>Email Verification Complete!</h1>
-        <p>Awesome, your email is now verified for SwapMyStuff! Please close this page and head back to the app.</p>
+        <h1>Email Verification</h1>
+        <p>Processing your email verification...</p>
     </div>
     <script>
-        // Extract query parameters (e.g., state, token) to pass to the app
         const params = new URLSearchParams(window.location.search);
-        const state = params.get('state');
         const token = params.get('token');
         const type = params.get('type');
+        const state = params.get('state');
         const email = params.get('email');
 
-        // Redirect to app with parameters if app is installed
-        if (state && token && type) {
-            const deepLink = `com.swapmystuff20://auth/confirm?state=${state}&token=${token}&type=${type}${email ? `&email=${email}` : ''}`;
+        if (token && type && state) {
+            const deepLink = `com.swapmystuff20://auth/confirm?token=${token}&type=${type}&state=${state}${email ? `&email=${email}` : ''}`;
             window.location.href = deepLink;
+            setTimeout(() => {
+                document.querySelector('.container').innerHTML = `
+                    <h1>Email Verification</h1>
+                    <p>It looks like the SwapMyStuff app is not installed or the link couldn't be opened. Please open the SwapMyStuff app on the device where you registered and use the "Verify Now" button to complete verification, or install the app and try again.</p>
+                `;
+            }, 1000);
+        } else {
+            document.querySelector('.container').innerHTML = `
+                <h1>Invalid Verification Link</h1>
+                <p>The verification link is invalid or missing required parameters (token, type, or state). Please request a new confirmation email from the SwapMyStuff app.</p>
+            `;
         }
     </script>
 </body>
