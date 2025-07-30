@@ -3,61 +3,197 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Email Verification - SwapMyStuff</title>
+    <title>SwapMyStuff - Email Verification</title>
+    <script src="https://cdn.jsdelivr.net/npm/react@18.2.0/umd/react.production.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/react-dom@18.2.0/umd/react-dom.production.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@babel/standalone@7.20.15/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-            background-color: #f4f4f4;
-            text-align: center;
+        /* Custom animations */
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
         }
-        .container {
-            max-width: 600px;
-            padding: 20px;
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        
+        @keyframes pulse-slow {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
         }
-        h1 {
-            color: #333;
+        
+        .float-animation { animation: float 3s ease-in-out infinite; }
+        .pulse-slow { animation: pulse-slow 2s ease-in-out infinite; }
+        
+        /* Gradient backgrounds */
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         }
-        p {
-            color: #666;
-            margin-bottom: 20px;
+        
+        .success-gradient {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        }
+        
+        .error-gradient {
+            background: linear-gradient(135deg, #ff6b6b 0%, #feca57 100%);
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Email Verification</h1>
-        <p>Processing your email verification...</p>
-    </div>
-    <script>
-        const params = new URLSearchParams(window.location.search);
-        const token = params.get('token');
-        const type = params.get('type');
-        const state = params.get('state');
-        const email = params.get('email');
+    <div id="root"></div>
+    <script type="text/babel">
+        function VerificationPage() {
+            const [loading, setLoading] = React.useState(true);
+            
+            // Get URL parameters
+            const urlParams = new URLSearchParams(window.location.search);
+            const email = decodeURIComponent(urlParams.get('email') || '');
+            const verified = urlParams.get('verified') === 'true';
+            const userId = urlParams.get('userId') || '';
+            const error = urlParams.get('error') || '';
+            
+            React.useEffect(() => {
+                // Simulate loading for better UX
+                const timer = setTimeout(() => setLoading(false), 1000);
+                return () => clearTimeout(timer);
+            }, []);
+            
+            React.useEffect(() => {
+                if (verified && userId && !loading) {
+                    const deepLink = `com.swapmystuff20://auth/login?email=${encodeURIComponent(email)}&verified=true&user_id=${userId}`;
+                    
+                    // Auto-redirect after 3 seconds
+                    setTimeout(() => {
+                        window.location.href = deepLink;
+                    }, 3000);
+                }
+            }, [verified, userId, loading]);
 
-        if (token && type && state) {
-            const deepLink = `com.swapmystuff20://auth/confirm?token=${token}&type=${type}&state=${state}${email ? `&email=${email}` : ''}`;
-            window.location.href = deepLink;
-            setTimeout(() => {
-                document.querySelector('.container').innerHTML = `
-                    <h1>Email Verification</h1>
-                    <p>It looks like the SwapMyStuff app is not installed or the link couldn't be opened. Please open the SwapMyStuff app on the device where you registered and use the "Verify Now" button to complete verification, or install the app and try again.</p>
-                `;
-            }, 1000);
-        } else {
-            document.querySelector('.container').innerHTML = `
-                <h1>Invalid Verification Link</h1>
-                <p>The verification link is invalid or missing required parameters (token, type, or state). Please request a new confirmation email from the SwapMyStuff app.</p>
-            `;
+            if (loading) {
+                return (
+                    <div className="min-h-screen gradient-bg flex items-center justify-center p-4">
+                        <div className="text-center">
+                            <div className="w-16 h-16 border-4 border-white border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                            <p className="text-white text-lg font-medium">Processing verification...</p>
+                        </div>
+                    </div>
+                );
+            }
+
+            const getDeepLink = () => {
+                if (verified && userId) {
+                    return `com.swapmystuff20://auth/login?email=${encodeURIComponent(email)}&verified=true&user_id=${userId}`;
+                }
+                return `com.swapmystuff20://auth/confirm?email=${encodeURIComponent(email)}`;
+            };
+
+            const getErrorMessage = (errorCode) => {
+                switch(errorCode) {
+                    case 'invalid':
+                        return 'The verification link is invalid or missing required parameters.';
+                    case 'expired':
+                        return 'The confirmation link has expired.';
+                    case 'server_error':
+                        return 'A server error occurred. Please try again later.';
+                    default:
+                        return 'An unexpected error occurred during verification.';
+                }
+            };
+
+            return (
+                <div className={`min-h-screen flex items-center justify-center p-4 ${
+                    verified ? 'success-gradient' : error ? 'error-gradient' : 'gradient-bg'
+                }`}>
+                    <div className="max-w-md w-full bg-white rounded-3xl shadow-2xl p-8 transform transition-all duration-500 hover:scale-105">
+                        <div className="text-center">
+                            {verified ? (
+                                <>
+                                    <div className="mx-auto h-20 w-20 rounded-full bg-green-100 flex items-center justify-center mb-6 float-animation">
+                                        <svg className="h-12 w-12 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                                        </svg>
+                                    </div>
+                                    <h1 className="text-4xl font-bold text-gray-800 mb-4">🎉 Success!</h1>
+                                    <p className="text-gray-600 mb-2 text-lg">
+                                        Your email has been verified!
+                                    </p>
+                                    <p className="text-gray-500 mb-6 text-sm">
+                                        <span className="font-medium text-blue-600">{email}</span>
+                                    </p>
+                                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+                                        <p className="text-blue-800 text-sm pulse-slow">
+                                            🚀 Redirecting to SwapMyStuff app in a moment...
+                                        </p>
+                                    </div>
+                                </>
+                            ) : error ? (
+                                <>
+                                    <div className="mx-auto h-20 w-20 rounded-full bg-red-100 flex items-center justify-center mb-6">
+                                        <svg className="h-12 w-12 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                                        </svg>
+                                    </div>
+                                    <h1 className="text-4xl font-bold text-gray-800 mb-4">❌ Oops!</h1>
+                                    <p className="text-gray-600 mb-6 text-lg">
+                                        {getErrorMessage(error)}
+                                    </p>
+                                    <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-6">
+                                        <p className="text-amber-800 text-sm">
+                                            💡 Please request a new confirmation email from the SwapMyStuff app.
+                                        </p>
+                                    </div>
+                                </>
+                            ) : (
+                                <>
+                                    <div className="mx-auto h-20 w-20 rounded-full bg-blue-100 flex items-center justify-center mb-6 pulse-slow">
+                                        <svg className="h-12 w-12 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                        </svg>
+                                    </div>
+                                    <h1 className="text-4xl font-bold text-gray-800 mb-4">📧 Verifying...</h1>
+                                    <p className="text-gray-600 mb-6 text-lg">
+                                        Please wait while we verify your email address.
+                                    </p>
+                                </>
+                            )}
+                            
+                            <a 
+                                href={getDeepLink()}
+                                className="inline-block bg-blue-600 text-white px-8 py-4 rounded-xl hover:bg-blue-700 transform hover:scale-105 transition-all duration-200 font-semibold text-lg shadow-lg mb-6"
+                            >
+                                🚀 Open SwapMyStuff App
+                            </a>
+                            
+                            <div className="border-t border-gray-200 pt-6">
+                                <p className="text-gray-600 text-sm mb-2">
+                                    Don't have the app yet?
+                                </p>
+                                <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                                    <a 
+                                        href="https://play.google.com/store/apps/details?id=com.swapmystuff20" 
+                                        className="flex items-center justify-center bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors duration-200 text-sm font-medium"
+                                    >
+                                        📱 Google Play
+                                    </a>
+                                    <a 
+                                        href="https://apps.apple.com/app/swapmystuff" 
+                                        className="flex items-center justify-center bg-gray-800 text-white px-4 py-2 rounded-lg hover:bg-gray-900 transition-colors duration-200 text-sm font-medium"
+                                    >
+                                        🍎 App Store
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    {/* Background decorative elements */}
+                    <div className="fixed inset-0 pointer-events-none overflow-hidden">
+                        <div className="absolute -top-4 -left-4 w-72 h-72 bg-white opacity-10 rounded-full mix-blend-multiply filter blur-xl animate-pulse"></div>
+                        <div className="absolute -bottom-8 -right-4 w-72 h-72 bg-white opacity-10 rounded-full mix-blend-multiply filter blur-xl animate-pulse"></div>
+                    </div>
+                </div>
+            );
         }
+
+        ReactDOM.render(<VerificationPage />, document.getElementById('root'));
     </script>
 </body>
 </html>
